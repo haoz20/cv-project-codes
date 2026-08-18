@@ -1,0 +1,8 @@
+data/*
+!data/garuda/
+data/garuda/*
+!data/garuda/.gitkeep
+output/
+__pycache__/
+*.pyc
+.DS_Store
