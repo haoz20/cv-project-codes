@@ -24,6 +24,9 @@ No `pip install` needed; nothing beyond `opencv-python`, `numpy`, `matplotlib` i
 
 ## Scripts
 
+Full copy-paste command reference, including the real museum photo folders and the demo pair:
+[`COMMANDS.md`](COMMANDS.md).
+
 Run from the repo root:
 
 ```bash
