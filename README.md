@@ -21,6 +21,9 @@ No `pip install` needed; nothing beyond `opencv-python`, `numpy`, `matplotlib` i
   multi-view photos with real overlap, so the pipeline produces real numbers today.
 - `data/garuda/` — empty. Drop the museum photo set here once captured; every script accepts
   `--images data/garuda/` and needs no code changes.
+- Full museum photo set + COLMAP outputs (images, `sparse/0` model) — not committed to git
+  (excluded via `.gitignore`, ~1GB): [Google Drive folder](https://drive.google.com/drive/folders/1A1RrD60YqDWfjYWO6MZWkZ678ztJa5qo?usp=sharing).
+  Shared as "Anyone with the link" — downloadable from any Google account, no access request needed.
 
 ## Scripts
 
