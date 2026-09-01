@@ -8,3 +8,12 @@ __pycache__/
 .DS_Store
 .vscode/
 images/
+scene/
+
+# Large source/derived assets that don't belong in git history -- rebuild
+# or re-download instead of committing (see docs/dense_pipeline.md).
+*.zip
+*.MOV
+*.mov
+colmap_work/
+*.pdf

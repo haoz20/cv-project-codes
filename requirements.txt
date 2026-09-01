@@ -1,0 +1,25 @@
+# Garuda 3D Reconstruction -- Python dependencies.
+#
+# Two things this file does NOT cover, because they aren't pip packages:
+#   - COLMAP        download colmap-x64-windows-cuda.zip (prebuilt CUDA
+#                    binary, unzip-and-run). See docs/setup_rog.md.
+#   - OpenMVS        (optional, Stage 11 only) download
+#                    OpenMVS_Windows_x64_CUDA.7z, same story.
+#
+# Install with:  pip install -r requirements.txt
+# Tested against: opencv 4.12.0 / numpy 1.26.4 / matplotlib 3.9.2
+# (Anaconda, /opt/anaconda3/bin/python) -- keep numpy <2.0 to match.
+
+# --- Stage 2 (feature detection/matching) + Stage 4-6 (IBR baseline track) ---
+opencv-python>=4.8,<5.0
+numpy>=1.26,<2.0
+matplotlib>=3.9
+
+# --- Stage 12 (mesh export to .glb) ---
+trimesh>=4.0
+
+# --- Stage 13 (turntable render) ---
+open3d>=0.18
+
+# --- convenience ---
+Pillow>=10.0
