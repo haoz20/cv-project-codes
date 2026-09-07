@@ -1,25 +1,27 @@
-# Garuda 3D Reconstruction -- Python dependencies.
+# Kratib 3DGS -- pip dependencies, installed inside the `kratib` conda env.
 #
-# Two things this file does NOT cover, because they aren't pip packages:
-#   - COLMAP        download colmap-x64-windows-cuda.zip (prebuilt CUDA
-#                    binary, unzip-and-run). See docs/setup_rog.md.
-#   - OpenMVS        (optional, Stage 11 only) download
-#                    OpenMVS_Windows_x64_CUDA.7z, same story.
+# Three things this file does NOT cover, because they are not pip packages
+# (see docs/setup_rog.md):
+#   - NVIDIA driver        system install
+#   - VS2022 Build Tools   "Desktop development with C++" -- gsplat needs cl.exe
+#   - COLMAP               Windows CUDA build, on PATH -- ns-process-data calls it
 #
-# Install with:  pip install -r requirements.txt
-# Tested against: opencv 4.12.0 / numpy 1.26.4 / matplotlib 3.9.2
-# (Anaconda, /opt/anaconda3/bin/python) -- keep numpy <2.0 to match.
+# Install order matters:
+#   1. conda env create -f environment.yml     (Python, in-env CUDA, ffmpeg)
+#   2. conda activate kratib
+#   3. pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+#   4. pip install -r requirements.txt
+#   5. pip install gsplat --no-build-isolation
+#      ^ separate + last: its build imports torch and needs nvcc + cl.exe on PATH.
+#        Run the first `ns-train` from an "x64 Native Tools Command Prompt for VS 2022".
 
-# --- Stage 2 (feature detection/matching) + Stage 4-6 (IBR baseline track) ---
-opencv-python>=4.8,<5.0
-numpy>=1.26,<2.0
-matplotlib>=3.9
+# --- Stage 01 (video -> frames) ---
+av>=12.0            # PyAV: in-process decode, HEVC-safe (cv2.VideoCapture is not)
+opencv-python>=4.8
+numpy>=1.26
 
-# --- Stage 12 (mesh export to .glb) ---
-trimesh>=4.0
+# --- Stages 02-05 (COLMAP wrangling, training, export, render) ---
+nerfstudio>=1.1.5
 
-# --- Stage 13 (turntable render) ---
-open3d>=0.18
-
-# --- convenience ---
-Pillow>=10.0
+# torch / torchvision -- installed separately (step 3) from the cu124 index, not here.
+# gsplat              -- installed separately (step 5) with --no-build-isolation.

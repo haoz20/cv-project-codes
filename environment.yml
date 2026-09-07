@@ -1,0 +1,24 @@
+# Kratib 3DGS -- conda environment for the ROG (Windows, RTX 40-series 6 GB).
+#
+# This file covers only what conda provides: Python, an in-env CUDA toolkit
+# (nvcc -- gsplat's build needs it), and ffmpeg (ns-process-data shells out
+# to it). The pip half -- torch, nerfstudio, gsplat -- is in
+# requirements.txt and installed AFTER this env exists. Full ordered
+# procedure and the manual (non-package) prerequisites are in
+# docs/setup_rog.md.
+#
+#   conda env create -f environment.yml
+#   conda activate kratib
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+#   pip install -r requirements.txt
+#   pip install gsplat --no-build-isolation
+
+name: kratib
+channels:
+  - nvidia/label/cuda-12.4.0
+  - conda-forge
+dependencies:
+  - python=3.11
+  - cuda-toolkit=12.4.0
+  - ffmpeg
+  - pip

@@ -1,87 +1,88 @@
-# ROG (Windows, GTX 1650) setup
+# ROG setup (Windows, RTX 40-series 6 GB)
 
-Runs Stage 9 (dense stereo — needs CUDA) and optionally Stage 11 (OpenMVS
-texture). Stages 7, 8, 10, 12, 13 can also run here, or on the Mac.
+Everything in this pipeline runs here, inside a conda env named `kratib`.
+The Mac is only for writing and for viewing the exported `.ply` in a
+browser.
 
-## COLMAP
+> **Why conda, not uv/venv:** on Windows, conda installs the CUDA toolkit
+> *into the environment*, so `nvcc` (which gsplat's build needs) arrives
+> without a system-wide CUDA install or PATH juggling. It is also
+> nerfstudio's documented Windows path, so error messages match their docs.
+> An earlier attempt at this project on a "fragile PyTorch/gsplat/Python
+> wheel matrix" was abandoned -- the ordered procedure below is the fix.
 
-Download `colmap-x64-windows-cuda.zip` from the
-[COLMAP releases page](https://github.com/colmap/colmap/releases) — verified
-present as `colmap-x64-windows-cuda.zip` on the current release (`v4.1.1`,
-alongside a `colmap-x64-windows-nocuda.zip` — get the CUDA one). Unzip
-anywhere. No installer, no build step, no `nvcc`, no Python version pinning
-— this is the whole reason the classical route replaced the earlier 3D
-Gaussian Splatting plan, which needed a fragile PyTorch/gsplat/Python-3.10
-wheel matrix on this exact machine.
+## 1. Manual prerequisites (not Python packages -- install once)
 
-**Verify:**
+| Component | Notes |
+|---|---|
+| **NVIDIA driver** | A recent GeForce driver. `nvidia-smi` must work. |
+| **VS 2022 Build Tools** | Installer -> check **"Desktop development with C++"**. Provides `cl.exe`, which gsplat's CUDA build invokes. |
+| **COLMAP** | Download `COLMAP-*-windows-cuda.zip` from the [COLMAP releases page](https://github.com/colmap/colmap/releases). Unzip anywhere, add that folder to `PATH`. Verify: `colmap -h` runs, and `colmap patch_match_stereo -h` lists `--PatchMatchStereo.gpu_index` (if not, you unzipped the `nocuda` build). If `colmap -h` fails on a missing DLL, install the x64 **Visual C++ Redistributable**. |
 
-```bat
-colmap.exe -h
-colmap.exe patch_match_stereo -h
-```
-
-- If `colmap.exe -h` fails with a missing-DLL error, install the
-  **Visual C++ Redistributable** (x64) — that's the fix, not a sign the
-  build is broken.
-- `patch_match_stereo -h` should list `--PatchMatchStereo.gpu_index` among
-  its options. If it doesn't, you unzipped the `nocuda` build by mistake.
-
-**Make it discoverable by the pipeline scripts** — either:
+## 2. Create the environment
 
 ```bat
-set COLMAP_BIN=C:\path\to\COLMAP-3.x-windows-cuda\colmap.exe
+conda env create -f environment.yml
+conda activate kratib
 ```
 
-or add that folder to `PATH`, or pass `--colmap-bin` explicitly to every
-stage script (`08_undistort.py`, `09_dense_stereo.py`, `10_fuse_mesh.py`).
+This gives you Python 3.11, an in-env CUDA 12.4 toolkit (`nvcc`), and
+`ffmpeg`.
 
-## OpenMVS (optional, Stage 11 only)
-
-Only needed if the Stage 10 vertex-colour mesh isn't good enough and you
-want a real UV-texture atlas. Download `OpenMVS_Windows_x64_CUDA.7z` from
-the [OpenMVS releases page](https://github.com/cdcseacave/openMVS/releases)
-— verified present on the current release (`v2.4.0`). Unzip (needs 7-Zip or
-similar for `.7z`).
+## 3. Install the pip half -- order matters
 
 ```bat
-set OPENMVS_BIN_DIR=C:\path\to\OpenMVS_Windows_x64_CUDA
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+pip install -r requirements.txt
+pip install gsplat --no-build-isolation
 ```
 
-or pass `--openmvs-bin-dir` to `src/11_texture_openmvs.py`. OpenMVS's CLI
-flags have changed across releases and this script's exact invocation
-wasn't tested against a live install — check `TextureMesh --help` if it
-doesn't match; see [troubleshooting.md](troubleshooting.md#stage-11-openmvs).
+- `torch` comes from the **cu124 index**, not PyPI -- the default PyPI
+  wheel is CPU-only on Windows.
+- `gsplat` is **separate and last**: its build script imports `torch`, so
+  torch must already be installed, and `--no-build-isolation` is required
+  so the build can see it.
 
-## Transferring the scene
+## 4. First-run gotcha: the CUDA compile
 
-`garuda_colmap_data.zip` (927 MB, built on the Mac) already bundles the 99
-full-resolution JPGs and `sparse/0/` — the one file to move over. Unlike the
-abandoned 3DGS plan, **don't pre-downscale the images** before transferring;
-COLMAP controls its own working resolution via
-`--PatchMatchStereo.max_image_size` (Stage 9), and dense MVS/texture quality
-both benefit from the source files staying full resolution.
+`gsplat` **JIT-compiles its CUDA kernels on first import**, and needs both
+`nvcc` and `cl.exe` on `PATH` at that moment. Run the **first** training
+from an **"x64 Native Tools Command Prompt for VS 2022"** (Start menu),
+then `conda activate kratib` inside it. After the kernels are built once,
+an ordinary terminal is fine.
+
+## 5. Verify
 
 ```bat
-python src\07_prepare_scene.py --zip garuda_colmap_data.zip --out scene
+python -c "import torch; print(torch.cuda.is_available())"     REM -> True
+nvcc --version                                                 REM -> 12.4, from the env
+python -c "import gsplat"                                       REM compiles once, then clean
+python run_pipeline.py --dry-run                               REM prints every command
 ```
 
-## Python environment
-
-Only needed on the ROG if running Stages 12/13 (export/render) here too —
-otherwise those are lighter run on the Mac. See
-[setup_mac.md](setup_mac.md#python-environment) for the same
-`pip install -r requirements.txt` step; nothing ROG-specific about it (no
-CUDA-matched wheel juggling this time — trimesh/open3d are plain pip
-packages, unlike gsplat's Python-3.10-only Windows wheels under the
-abandoned plan).
-
-## Quick end-to-end check
+## 6. Run
 
 ```bat
-python run_dense_pipeline.py --scene scene --dry-run
+python run_pipeline.py            REM full chain, pauses after frame extraction
 ```
 
-Prints every command in order without running anything — confirms the
-scene path, `colmap.exe`, and (if `--with-texture`) OpenMVS are all
-resolved correctly before committing to the multi-hour Stage 9 run.
+or stage by stage:
+
+```bat
+python src\01_extract_frames.py
+REM  ... delete blurred frames from frames\ using frames\sharpness.csv ...
+python src\02_process_data.py    REM STOP if registration < 80%
+python src\03_train.py           REM ~30 min; live viewer at http://localhost:7007
+python src\04_export.py          REM -> exports\splat.ply
+python src\05_render.py          REM -> renders\orbit.mp4
+```
+
+## If the 6 GB card OOMs during training
+
+In order:
+
+1. `python src\03_train.py --downscale 3`
+2. Switch to an MCMC densification strategy with a hard Gaussian cap
+   (~500k) -- see the [splatfacto docs](https://docs.nerf.studio/nerfology/methods/splat.html).
+3. Fallback: train on a cloud GPU from the same `proc/` folder; nothing
+   upstream of Stage 03 changes.

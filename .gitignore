@@ -1,19 +1,27 @@
-data/*
-!data/garuda/
-data/garuda/*
-!data/garuda/.gitkeep
-output/
+# Large / regenerable pipeline artifacts -- rebuild, don't commit.
+data/*.mp4
+data/*.mov
+data/*.MOV
+data/*.mkv
+frames/
+proc/
+outputs/
+exports/
+renders/
+
 __pycache__/
 *.pyc
 .DS_Store
-.vscode/
-images/
-scene/
+.ipynb_checkpoints/
 
-# Large source/derived assets that don't belong in git history -- rebuild
-# or re-download instead of committing (see docs/dense_pipeline.md).
+# Local-only large assets -- never commit (covers leftover Garuda-era files).
 *.zip
-*.MOV
+*.7z
+*.mp4
 *.mov
-colmap_work/
+*.MOV
+*.mkv
 *.pdf
+/images/
+/output/
+/colmap_work/
