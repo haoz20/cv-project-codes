@@ -38,20 +38,28 @@ Google Drive and place it at `data/kratib.MOV`:
 
 <https://drive.google.com/drive/folders/1A1RrD60YqDWfjYWO6MZWkZ678ztJa5qo?usp=sharing>
 
-## Quickstart (on the ROG)
+## Setup (on the ROG)
 
-```bat
-conda env create -f environment.yml
-conda activate kratib
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
-pip install -r requirements.txt
-pip install gsplat --no-build-isolation
+**Use WSL2.** Native-Windows setup fails at the gsplat CUDA build (CUDA 12.4
+vs current MSVC -- `cudafe++` crashes), on top of Smart App Control, DLL,
+and COLMAP-version issues. In WSL2, `gsplat` installs as a prebuilt wheel
+and `colmap` is one `apt` line. Full steps:
 
-python run_pipeline.py --dry-run     REM sanity-check the command chain
-python run_pipeline.py               REM run it (pauses after Stage 01 for the manual cull)
+**[`docs/setup_wsl2.md`](docs/setup_wsl2.md)** ← start here
+
+Then:
+
+```bash
+python src/01_extract_frames.py --video data/kratib_up.mp4
+#   ... delete blurred frames from frames/ ...
+python src/02_process_data.py            # add --no-gpu if COLMAP hits a GL error
+python src/03_train.py                   # viewer at http://localhost:7007
+python src/04_export.py
+python src/05_render.py
 ```
 
-Full environment procedure and gotchas: [`docs/setup_rog.md`](docs/setup_rog.md).
+`environment.yml` / `requirements.txt` / [`docs/setup_rog.md`](docs/setup_rog.md)
+are the native-Windows attempt, kept for reference.
 How to shoot the video: [`docs/capture.md`](docs/capture.md).
 
 ## Viewing the result on the Mac

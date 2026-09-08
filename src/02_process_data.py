@@ -19,6 +19,7 @@ overlap, keep the textured background in frame).
 Usage:
     python src/02_process_data.py                 # frames/ -> proc/
     python src/02_process_data.py --data frames --output proc
+    python src/02_process_data.py --no-gpu        # CPU SIFT (WSL2 without a GL context)
     python src/02_process_data.py --dry-run
 """
 
@@ -58,6 +59,9 @@ def main():
                         help="Folder of frames (default: frames/)")
     parser.add_argument("--output", default=PROC_DIR,
                         help="Output dir (default: proc/)")
+    parser.add_argument("--no-gpu", action="store_true",
+                        help="Run COLMAP feature extraction/matching on CPU. Needed in "
+                             "some WSL2 setups where SiftGPU has no OpenGL context.")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -72,11 +76,14 @@ def main():
         require_exe("ns-process-data",
                     "pip install nerfstudio  (inside the kratib conda env)")
         require_exe("colmap",
-                    "Install COLMAP (Windows CUDA build) on PATH -- see docs/setup_rog.md")
+                    "Install COLMAP on PATH -- see docs/setup_wsl2.md (recommended) "
+                    "or docs/setup_rog.md")
 
     cmd = ["ns-process-data", "images",
            "--data", args.data,
            "--output-dir", args.output]
+    if args.no_gpu:
+        cmd.append("--no-gpu")
     run(cmd, dry_run=args.dry_run)
 
     if not args.dry_run:

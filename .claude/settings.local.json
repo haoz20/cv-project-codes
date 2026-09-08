@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p data/sample data/garuda output src)",
+      "Bash(touch data/garuda/.gitkeep)"
+    ]
+  }
+}
