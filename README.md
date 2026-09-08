@@ -54,9 +54,8 @@ versions:
 conda create -n kratib python=3.10 -y
 conda activate kratib
 pip install torch==2.4.1 torchvision==0.19.1 --index-url https://download.pytorch.org/whl/cu118
-pip install "https://github.com/nerfstudio-project/gsplat/releases/download/v1.5.2/gsplat-1.5.2+pt24cu118-cp310-cp310-win_amd64.whl"
-pip install nerfstudio av opencv-python numpy
-pip install --force-reinstall --no-deps "https://github.com/nerfstudio-project/gsplat/releases/download/v1.5.2/gsplat-1.5.2+pt24cu118-cp310-cp310-win_amd64.whl"
+pip install -r requirements.txt
+pip install gsplat
 python -c "import gsplat; from gsplat.cuda._backend import _C; print('gsplat', gsplat.__version__, 'OK')"
 ```
 
