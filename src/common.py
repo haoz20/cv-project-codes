@@ -78,12 +78,18 @@ def count_images(dirpath):
 
 def latest_train_config(outputs_dir=OUTPUTS_DIR):
     """
-    Path to the most recent splatfacto config.yml.
+    Path to the most recent *complete* splatfacto run's config.yml.
 
     nerfstudio writes outputs/<experiment>/splatfacto/<timestamp>/config.yml.
+    Picks by modification time (not path order -- experiment names like
+    "proc" would otherwise sort after "kratib"), and skips runs that have
+    no nerfstudio_models/ checkpoint dir (crashed before the first save).
     """
-    hits = sorted(glob.glob(os.path.join(outputs_dir, "*", "splatfacto", "*", "config.yml")))
-    if not hits:
+    hits = glob.glob(os.path.join(outputs_dir, "*", "splatfacto", "*", "config.yml"))
+    complete = [h for h in hits
+                if os.path.isdir(os.path.join(os.path.dirname(h), "nerfstudio_models"))]
+    pool = complete or hits
+    if not pool:
         sys.exit(f"ERROR: no splatfacto config.yml under {outputs_dir}.\n"
                  f"       Run src/03_train.py first, or pass --config explicitly.")
-    return hits[-1]
+    return max(pool, key=os.path.getmtime)
