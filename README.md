@@ -38,28 +38,49 @@ Google Drive and place it at `data/kratib.MOV`:
 
 <https://drive.google.com/drive/folders/1A1RrD60YqDWfjYWO6MZWkZ678ztJa5qo?usp=sharing>
 
-## Setup (on the ROG)
+## Setup (on the ROG, native Windows)
 
-**Use WSL2.** Native-Windows setup fails at the gsplat CUDA build (CUDA 12.4
-vs current MSVC -- `cudafe++` crashes), on top of Smart App Control, DLL,
-and COLMAP-version issues. In WSL2, `gsplat` installs as a prebuilt wheel
-and `colmap` is one `apt` line. Full steps:
+Building `gsplat` from source on this machine fails (`cudafe++` crashes --
+CUDA vs the current MSVC). The way through is a **prebuilt gsplat wheel**:
+no CUDA toolkit, no MSVC, no compile. The wheel pins the Python and torch
+versions:
 
-**[`docs/setup_wsl2.md`](docs/setup_wsl2.md)** ← start here
+- **Python 3.10** -- the wheel is `cp310`
+- **torch 2.4.1 + cu118** -- the wheel is `+pt24cu118`; torch bundles the
+  CUDA 11.8 runtime, so nothing else CUDA is needed
+  (torch 2.1.2 will *not* load a `+pt24` wheel -- ABI mismatch)
 
-Then:
-
-```bash
-python src/01_extract_frames.py --video data/kratib_up.mp4
-#   ... delete blurred frames from frames/ ...
-python src/02_process_data.py            # add --no-gpu if COLMAP hits a GL error
-python src/03_train.py                   # viewer at http://localhost:7007
-python src/04_export.py
-python src/05_render.py
+```bat
+conda create -n kratib python=3.10 -y
+conda activate kratib
+pip install torch==2.4.1 torchvision==0.19.1 --index-url https://download.pytorch.org/whl/cu118
+pip install "https://github.com/nerfstudio-project/gsplat/releases/download/v1.5.2/gsplat-1.5.2+pt24cu118-cp310-cp310-win_amd64.whl"
+pip install nerfstudio av opencv-python numpy
+pip install --force-reinstall --no-deps "https://github.com/nerfstudio-project/gsplat/releases/download/v1.5.2/gsplat-1.5.2+pt24cu118-cp310-cp310-win_amd64.whl"
+python -c "import gsplat; from gsplat.cuda._backend import _C; print('gsplat', gsplat.__version__, 'OK')"
 ```
 
-`environment.yml` / `requirements.txt` / [`docs/setup_rog.md`](docs/setup_rog.md)
-are the native-Windows attempt, kept for reference.
+The last line must print `... OK` **with no compilation**. (The second
+gsplat install re-pins the wheel in case `pip install nerfstudio` pulled a
+different gsplat; splatfacto works with 1.5.x.)
+
+**COLMAP:** download `colmap-x64-windows-cuda.zip` from a **3.11.x**
+release (not 3.12 -- its option names changed and break `ns-process-data`),
+unzip, add its folder to `PATH`. See [`docs/setup_rog.md`](docs/setup_rog.md).
+
+Then run the pipeline:
+
+```bat
+python src\01_extract_frames.py --video data\kratib_up.mp4
+REM  ... delete blurred frames from frames\ using frames\sharpness.csv ...
+python src\02_process_data.py
+python src\03_train.py
+python src\04_export.py
+python src\05_render.py
+```
+
+Fallback if native Windows still fights you:
+[`docs/setup_wsl2.md`](docs/setup_wsl2.md).
 How to shoot the video: [`docs/capture.md`](docs/capture.md).
 
 ## Viewing the result on the Mac
