@@ -16,10 +16,16 @@ If fewer than ~80% of the frames registered, stop -- the pose graph is bad
 and no splatfacto tuning fixes it. Reshoot per docs/capture.md (more
 overlap, keep the textured background in frame).
 
+splatfacto's data manager resizes images in Python, so we pass
+--num-downscales 0: no pre-generated images_2/4/8 folders (which also
+dodges a broken-ffmpeg-command bug in ns-process-data's downscale step).
+Override with --num-downscales N if another consumer needs them.
+
 Usage:
     python src/02_process_data.py                 # frames/ -> proc/
     python src/02_process_data.py --data frames --output proc
     python src/02_process_data.py --no-gpu        # CPU SIFT (WSL2 without a GL context)
+    python src/02_process_data.py --num-downscales 3
     python src/02_process_data.py --dry-run
 """
 
@@ -62,6 +68,10 @@ def main():
     parser.add_argument("--no-gpu", action="store_true",
                         help="Run COLMAP feature extraction/matching on CPU. Needed in "
                              "some WSL2 setups where SiftGPU has no OpenGL context.")
+    parser.add_argument("--num-downscales", type=int, default=0,
+                        help="Pre-generated downscaled image sets (default: 0 -- "
+                             "splatfacto downscales in Python; 0 also avoids a broken "
+                             "ffmpeg command in ns-process-data).")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -81,7 +91,8 @@ def main():
 
     cmd = ["ns-process-data", "images",
            "--data", args.data,
-           "--output-dir", args.output]
+           "--output-dir", args.output,
+           "--num-downscales", str(args.num_downscales)]
     if args.no_gpu:
         cmd.append("--no-gpu")
     run(cmd, dry_run=args.dry_run)
