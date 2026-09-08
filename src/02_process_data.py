@@ -16,16 +16,19 @@ If fewer than ~80% of the frames registered, stop -- the pose graph is bad
 and no splatfacto tuning fixes it. Reshoot per docs/capture.md (more
 overlap, keep the textured background in frame).
 
-splatfacto's data manager resizes images in Python, so we pass
---num-downscales 0: no pre-generated images_2/4/8 folders (which also
-dodges a broken-ffmpeg-command bug in ns-process-data's downscale step).
-Override with --num-downscales N if another consumer needs them.
+By default we pass --skip-image-processing and --num-downscales 0:
+ns-process-data's image copy/downscale step builds ffmpeg commands with
+bash-style quoting that breaks on Windows (`-map ''` -> empty), and the
+Stage 01 frames are already clean JPEGs that don't need re-encoding.
+COLMAP then reads the frames folder directly and transforms.json
+references them by relative path. Pass --copy-images to restore the
+normal copy/downscale behaviour (fine on Linux).
 
 Usage:
     python src/02_process_data.py                 # frames/ -> proc/
     python src/02_process_data.py --data frames --output proc
     python src/02_process_data.py --no-gpu        # CPU SIFT (WSL2 without a GL context)
-    python src/02_process_data.py --num-downscales 3
+    python src/02_process_data.py --copy-images --num-downscales 3
     python src/02_process_data.py --dry-run
 """
 
@@ -70,8 +73,12 @@ def main():
                              "some WSL2 setups where SiftGPU has no OpenGL context.")
     parser.add_argument("--num-downscales", type=int, default=0,
                         help="Pre-generated downscaled image sets (default: 0 -- "
-                             "splatfacto downscales in Python; 0 also avoids a broken "
-                             "ffmpeg command in ns-process-data).")
+                             "splatfacto downscales in Python).")
+    parser.add_argument("--copy-images", action="store_true",
+                        help="Let ns-process-data copy/normalise images via ffmpeg. "
+                             "Default is to skip it (--skip-image-processing) -- that "
+                             "ffmpeg step is broken on Windows and the frames are "
+                             "already clean JPEGs.")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -93,6 +100,8 @@ def main():
            "--data", args.data,
            "--output-dir", args.output,
            "--num-downscales", str(args.num_downscales)]
+    if not args.copy_images:
+        cmd.append("--skip-image-processing")
     if args.no_gpu:
         cmd.append("--no-gpu")
     run(cmd, dry_run=args.dry_run)
