@@ -16,7 +16,15 @@
 #        Run the first `ns-train` from an "x64 Native Tools Command Prompt for VS 2022".
 
 # --- Stage 01 (video -> frames) ---
-av>=12.0            # PyAV: in-process decode, HEVC-safe (cv2.VideoCapture is not)
+av>=12.0            # PyAV: in-process decode, HEVC-safe (cv2.VideoCapture is not).
+                    # NOTE: av==17.1.0's bundled ffmpeg auto-applies DISPLAYMATRIX
+                    # rotation during HEVC decode (frames come out rotated with no
+                    # --rotate flag passed); av>=18.1 does not, but 18.1 requires
+                    # Python >=3.11, which conflicts with this env's Python 3.10
+                    # pin (needed for the prebuilt cp310 gsplat wheel -- see
+                    # docs/setup_rog.md). So on Python 3.10 (the ROG/Windows box),
+                    # stay on av==17.1.0 and pass --rotate 90 to 01_extract_frames.py
+                    # to cancel the auto-rotation instead of upgrading av here.
 opencv-python>=4.8
 numpy>=1.26
 
