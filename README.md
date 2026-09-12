@@ -31,6 +31,15 @@ CV term project, Path 2 (Neural Rendering). One handheld video in; a
 The numbered scripts are the source of truth and run individually.
 `run_pipeline.py` just chains them with `--from` / `--to` / `--dry-run`.
 
+To export a specific training run (rather than the latest one under
+`outputs/`) to its own named folder -- useful for keeping multiple
+experiments' `.ply` files side by side instead of overwriting
+`exports/splat.ply` each time -- call `ns-export` directly:
+
+```bat
+ns-export gaussian-splat --load-config outputs\kratib\splatfacto\<ts>\config.yml --output-dir exports\splat\
+```
+
 ## Get the capture video
 
 The `kratib.MOV` capture is not in git (large binary). Download it from
