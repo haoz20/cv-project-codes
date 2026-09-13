@@ -1,0 +1,110 @@
+:root { color-scheme: dark; }
+
+html, body, #root, #app { height: 100%; margin: 0; }
+
+body {
+  background: #111;
+  color: #ddd;
+  font: 14px/1.5 system-ui, sans-serif;
+  overflow: hidden;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 240px 1fr 240px;
+  grid-template-areas: "left views right";
+  height: 100%;
+  gap: 8px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+#leftPanel { grid-area: left; }
+#rightPanel { grid-area: right; }
+#views {
+  grid-area: views;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.panel h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  opacity: .6;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+.field { margin-bottom: 16px; }
+.field label { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; }
+.field input[type="color"] {
+  width: 100%; height: 32px; border: 1px solid rgba(255,255,255,.25);
+  border-radius: 6px; background: none; padding: 2px; cursor: pointer;
+}
+.field input[type="range"] { width: 100%; }
+.field .row { display: flex; justify-content: space-between; opacity: .6; font-size: 12px; }
+.field button {
+  width: 100%; border: 1px solid rgba(255, 255, 255, .2); border-radius: 6px;
+  padding: 8px 10px; background: rgba(255, 255, 255, .08); color: #ddd; cursor: pointer;
+}
+.field button:hover { background: rgba(255, 255, 255, .16); }
+.hintList { list-style: none; margin: 0; padding: 0; opacity: .7; font-size: 12.5px; }
+.hintList li { margin-bottom: 6px; }
+
+.view {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .08);
+}
+.viewerHost { position: absolute; inset: 0; }
+.viewerHost canvas { display: block; width: 100% !important; height: 100% !important; }
+.viewLabel {
+  position: absolute; top: 8px; left: 10px; z-index: 5;
+  font-size: 11px; opacity: .55; text-transform: uppercase; letter-spacing: .04em;
+  pointer-events: none;
+}
+.drop {
+  position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 20px;
+  background: rgba(0, 0, 0, .35);
+}
+.drop p { margin: 0; max-width: 22rem; }
+.drop label {
+  border: 1px solid #555; border-radius: 8px; padding: 8px 16px;
+  cursor: pointer; background: rgba(28, 28, 28, .85);
+}
+.drop label:hover { background: rgba(38, 38, 38, .95); }
+.drop input { display: none; }
+.err { color: #ff6b6b; white-space: pre-wrap; font-size: 12px; }
+.loading { opacity: .7; font-size: 12px; }
+
+@media (max-width: 900px) {
+  #app {
+    grid-template-columns: 1fr;
+    grid-template-areas: "left" "views" "right";
+    grid-auto-rows: auto 1fr auto;
+    overflow-y: auto;
+  }
+  .panel { max-height: 160px; }
+}
+
+@media (max-width: 640px) {
+  #views { flex-direction: column; }
+}

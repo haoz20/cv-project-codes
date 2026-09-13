@@ -14,6 +14,12 @@ __pycache__/
 .DS_Store
 .ipynb_checkpoints/
 
+# Node / frontend tooling (viewer/)
+/viewer/node_modules/
+dist/
+*.log
+npm-debug.log*
+
 # Local-only large assets -- never commit (covers leftover Garuda-era files).
 *.zip
 *.7z
